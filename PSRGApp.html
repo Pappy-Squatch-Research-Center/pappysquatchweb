@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PSRG // TACTICAL DATA TERMINAL V4.11</title>
+    <style>
+        /* ================= THEME & VARIABLES ================= */
+        :root {
+            color-scheme: dark;
+            --bg-base: #050604;
+            --bg-surface: #121510;
+            --bg-surface-alt: #1a1f18;
+            --border-subtle: #2b3525;
+            --border-main: #4a5c3d;
+            
+            /* High Contrast Text */
+            --text-bright: #ffffff;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8; 
+            
+            /* High-Vis Accents */
+            --sci-green: #a3e635; 
+            --sci-blue: #7dd3fc;  
+            --sci-amber: #f59e0b; 
+            --sci-red: #ef4444; 
+            
+            /* Readability Fonts */
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        /* ================= BASE RESET ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-base); color: var(--text-main); font-family: var(--font-sans); 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden; overscroll-behavior-y: none; font-size: 16px; 
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--border-main); border-radius: 3px; }
+
+        /* ================= LAYOUT ================= */
+        header { background-color: var(--bg-surface); border-bottom: 3px solid var(--sci-green); z-index: 10; }
+        .telemetry-strip { display: flex; justify-content: space-between; background: #000; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: bold; color: var(--sci-amber); border-bottom: 1px solid var(--border-main); font-family: var(--font-mono); }
+        .telemetry-strip span { display: flex; gap: 1rem; }
+        .header-main { padding: max(0.5rem, env(safe-area-inset-top)) 1rem 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 1rem; padding-bottom: 7rem; width: 100%; scroll-behavior: smooth; }
+        nav { background-color: var(--bg-surface); border-top: 2px solid var(--border-main); display: flex; position: absolute; bottom: 0; width: 100%; z-index: 20; padding-bottom: max(0, env(safe-area-inset-bottom)); }
+
+        /* ================= COMPONENTS ================= */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-start { display: flex; justify-content: flex-start; align-items: center; gap: 0.75rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 0.75rem; } }
+
+        .card { background-color: var(--bg-surface); border: 2px solid var(--border-main); border-radius: 6px; padding: 1.25rem; margin-bottom: 1.5rem; transition: border-color 0.3s; }
+        .card.edit-mode { border-color: var(--sci-amber); box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); }
+        .section-title { color: var(--sci-blue); font-size: 1.25rem; font-weight: 900; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.9rem; font-weight: 800; color: var(--sci-blue); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        input, select, textarea { width: 100%; background-color: var(--bg-base); border: 2px solid var(--border-main); color: var(--sci-green); padding: 0.85rem; border-radius: 4px; font-size: 1.1rem; font-weight: bold; font-family: var(--font-sans); outline: none; transition: all 0.2s; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.6; font-weight: normal; }
+        input:focus, select:focus, textarea:focus { border-color: var(--sci-green); background-color: #000; }
+        input[type="checkbox"] { width: 1.75rem; height: 1.75rem; accent-color: var(--sci-green); }
+        
+        .field-updated { animation: flashGreen 1.5s ease-out; }
+        @keyframes flashGreen { 0% { box-shadow: 0 0 15px var(--sci-green); border-color: var(--sci-green); } 100% { box-shadow: none; border-color: var(--border-main); } }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 1.1rem; border-radius: 4px; border: 2px solid var(--sci-green); font-weight: 900; font-size: 1.1rem; font-family: var(--font-sans); cursor: pointer; color: var(--sci-green); background-color: var(--bg-surface-alt); text-transform: uppercase; display: flex; justify-content: center; align-items: center; gap: 0.5rem; letter-spacing: 0.05em; transition: all 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn:hover { background-color: var(--sci-green); color: #000; }
+        .btn-danger { background-color: rgba(239, 68, 68, 0.1); border-color: var(--sci-red); color: var(--sci-red); }
+        .btn-amber { background-color: var(--sci-amber) !important; color: #000 !important; border-color: var(--sci-amber) !important; }
+        .btn-small { padding: 0.5rem 0.75rem; font-size: 0.9rem; font-weight: bold; background: var(--bg-surface); border: 2px solid var(--border-main); color: var(--text-bright); border-radius: 4px; text-decoration: none; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; cursor: pointer; }
+        .btn-small:hover { border-color: var(--sci-blue); color: var(--sci-blue); }
+
+        /* Tabs */
+        .tab-btn { flex: 1; padding: 1rem 0; background: none; border: none; border-top: 3px solid transparent; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
+        .tab-btn.active { border-top-color: var(--sci-green); color: var(--sci-green); background-color: var(--bg-surface-alt); }
+        .tab-btn svg { width: 1.75rem; height: 1.75rem; margin-bottom: 0.25rem; }
+        .tab-btn span { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.05em; }
+
+        /* Alerts & Utils */
+        .alert { padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 1rem; display: none; text-transform: uppercase; font-weight: bold; text-align: center; }
+        .alert.show { display: block; }
+        .alert-success { background-color: rgba(163, 230, 53, 0.15); border: 2px solid var(--sci-green); color: var(--sci-green); }
+        .alert-error { background-color: rgba(239, 68, 68, 0.15); border: 2px solid var(--sci-red); color: var(--sci-red); }
+        .alert-warning { background-color: rgba(245, 158, 11, 0.15); border: 2px solid var(--sci-amber); color: var(--sci-amber); }
+        .hide { display: none !important; }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+        /* Log Entries (Click to Expand) */
+        .log-entry { background-color: var(--bg-surface-alt); border-left: 4px solid var(--sci-green); border-radius: 0 6px 6px 0; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s; }
+        .log-entry:hover { background-color: var(--bg-surface); }
+        .log-entry-content { padding: 1rem; }
+        .log-meta { color: var(--sci-amber); font-size: 0.95rem; margin-bottom: 0.5rem; font-weight: 900; font-family: var(--font-mono); }
+        .log-data-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; margin-top: 0.75rem; color: var(--text-muted); font-size: 0.95rem; align-items: center; }
+        .log-data-grid strong { color: var(--text-bright); font-weight: bold; }
+        .expand-indicator { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-align: center; padding-top: 0.5rem; border-top: 1px dashed var(--border-main); margin-top: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
+        
+        .log-actions { background: #000; padding: 1rem; border-top: 2px solid var(--border-main); display: none; gap: 0.75rem; border-radius: 0 0 6px 0; }
+        .log-entry.expanded .log-actions { display: flex; flex-direction: column; }
+        .log-entry.expanded .expand-indicator { display: none; }
+        .log-entry.expanded { border-left-color: var(--sci-amber); }
+        
+        /* Radar Container */
+        .radar-container { position: relative; width: 100%; aspect-ratio: 1/1; background: radial-gradient(circle, var(--bg-surface-alt) 0%, var(--bg-base) 100%); border: 2px solid var(--border-main); border-radius: 50%; overflow: hidden; margin: 1.5rem 0; box-shadow: inset 0 0 25px rgba(0,0,0,0.9); }
+        #radar-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .radar-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; pointer-events: none; }
+        .radar-overlay::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(163, 230, 53, 0.25); }
+        .radar-overlay::after { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(163, 230, 53, 0.25); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="telemetry-strip text-mono">
+            <span>
+                <div id="hw-moon">MOON: CALC...</div>
+                <div id="hw-battery">BAT: CHECKING...</div>
+            </span>
+            <div id="hw-heading" style="color: var(--sci-blue);">HDG: ---°</div>
+        </div>
+        
+        <div class="header-main">
+            <div>
+                <h1 style="font-size: 1.4rem; color: var(--sci-green); margin: 0; display: flex; align-items: center; gap: 0.5rem; font-weight: 900;">
+                    <svg style="width: 1.25rem; height: 1.25rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.5,19.5 C7.5,19.5 6.5,13.5 7.5,9.5 C8.5,5.5 11.5,4.5 13.5,5.5 C15.5,6.5 17.5,8.5 17.5,12.5 C18.5,16.5 15.5,19.5 11.5,19.5 Z"/><circle cx="5" cy="5.5" r="1.5"/><circle cx="8" cy="3.5" r="1.2"/><circle cx="11" cy="2.5" r="1"/><circle cx="14" cy="3" r="1"/><circle cx="16.5" cy="4.5" r="0.8"/></svg>
+                    PAPPY SQUATCH RESEARCH
+                </h1>
+                <div style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-top: 0.35rem; letter-spacing: 0.05em;">TACTICAL TERMINAL // <span style="color:var(--sci-blue);">100% OFFLINE</span></div>
+            </div>
+            <div style="text-align: right; font-family: var(--font-mono);">
+                <div id="sys-clock" style="color: var(--sci-amber); font-size: 1rem; font-weight: bold;">00:00:00Z</div>
+                <div id="gps-status" style="font-size: 0.75rem; font-weight: bold; color: var(--sci-red); margin-top: 0.3rem;" class="pulse">NO SAT LINK</div>
+                <div id="gps-dms" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;"></div>
+            </div>
+        </div>
+        
+        <button id="btn-init-sensors" onclick="initSensors()" style="width: 100%; background: var(--sci-blue); color: #000; border: none; padding: 0.6rem; font-size: 0.9rem; font-weight: 900; font-family: var(--font-sans); text-transform: uppercase; cursor: pointer; letter-spacing: 0.05em;">
+            TAP TO START COMPASS & SENSORS
+        </button>
+    </header>
+
+    <main>
+        <div id="system-alert" class="alert"></div>
+
+        <!-- ================= VIEW: OBSERVATION ================= -->
+        <section id="view-obs" class="view-section">
+            <div class="card" id="card-obs">
+                <div class="flex-between" style="border-bottom: 2px dashed var(--border-subtle); margin-bottom: 1.25rem; padding-bottom: 0.75rem;">
+                    <h2 class="section-title" id="title-obs" style="border: none; padding: 0; margin: 0;">FIELD OBSERVATION</h2>
+                    <button id="btn-cancel-obs" class="btn-small hide" style="border-color: var(--sci-red); color: var(--sci-red);" onclick="cancelEditMode('obs')">CANCEL EDIT</button>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>OPERATIVE ID</label>
+                        <select id="obs-reporter">
+                            <option value="GERIDD">GERIDD (LEAD)</option>
+                            <option value="JEFF">JEFF (PAPPY)</option>
+                            <option value="JOSH">JOSH (FIELD OPS)</option>
+                            <option value="KYLE">KYLE (FIELD OPS)</option>
+                            <option value="WILLIAM">WILLIAM (FIELD OPS)</option>
+                            <option value="MILO">MILO (K9 SUPPORT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>MEDIA / A-V CAPTURE</label>
+                        <select id="obs-media">
+                            <option value="NONE">NO MEDIA</option>
+                            <option value="IPHONE_BROLL">IPHONE (B-ROLL)</option>
+                            <option value="THERMAL">THERMAL OVERWATCH</option>
+                            <option value="AUDIO">AUDIO RECORDER</option>
+                            <option value="TRAILCAM">TRAIL CAM SD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>TERRAIN / ZONE</label>
+                        <input type="text" id="obs-terrain" placeholder="e.g. RIDGELINE">
+                    </div>
+                    <div class="form-group">
+                        <label>BIO-MARKER / EVIDENCE</label>
+                        <input type="text" id="obs-bio" placeholder="e.g. TRACK, VOCAL">
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>ELEVATION (FT)</label>
+                        <input type="number" id="obs-elevation" placeholder="MANUAL">
+                    </div>
+                    <div class="form-group">
+                        <label>TEMP (°F)</label>
+                        <input type="number" id="obs-temp" placeholder="MANUAL">
+                    </div>
+                    <div class="form-group">
+                        <label>CONDITIONS</label>
+                        <select id="obs-conditions">
+                            <option value="DRY_CLEAR">DRY / CLEAR</option>
+                            <option value="DUSTY_WIND">DUSTY / WIND</option>
+                            <option value="OVERCAST">OVERCAST</option>
+                            <option value="PRECIPITATION">RAIN / SNOW</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>LOCAL DATE</label>
+                        <input type="date" id="obs-date">
+                    </div>
+                    <div class="form-group">
+                        <label>LOCAL TIME</label>
+                        <input type="time" id="obs-time">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>INCIDENT NOTES</label>
+                    <textarea id="obs-notes" rows="4" placeholder="Log movement patterns, audio descriptions, or details..."></textarea>
+                </div>
+
+                <div class="form-group flex-start" style="padding: 0.5rem 0 1.25rem 0;">
+                    <input type="checkbox" id="obs-attach-gps" checked>
+                    <label for="obs-attach-gps" id="label-obs-gps" style="margin:0; color: var(--text-bright); font-size: 1rem;">ATTACH SENSORS & GPS</label>
+                </div>
+                
+                <button id="btn-save-obs" class="btn double-tap-btn" data-original-text="ARCHIVE DATASET">
+                    <svg style="width:1.5rem; height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    <span>ARCHIVE DATASET</span>
+                </button>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; color: var(--text-muted); border-bottom: 2px solid var(--border-main); padding-bottom: 0.5rem; margin-bottom: 1rem; text-transform: uppercase;">RECENT OBSERVATIONS</h3>
+                <div id="obs-feed"></div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: TACTICAL RADAR ================= -->
+        <section id="view-radar" class="view-section hide">
+            <div class="card">
+                <div class="flex-between" style="border-bottom: 2px dashed var(--border-subtle); margin-bottom: 1rem; padding-bottom: 0.75rem;">
+                    <h2 class="section-title" style="border: none; padding: 0; margin: 0;">RELATIVE RADAR</h2>
+                    <select id="radar-range" style="width: auto; padding: 0.5rem; font-size: 0.9rem; font-weight: bold; border-color: var(--border-main);" onchange="drawRadar()">
+                        <option value="100">100m RANGE</option>
+                        <option value="500">500m RANGE</option>
+                        <option value="1000" selected>1km RANGE</option>
+                        <option value="5000">5km RANGE</option>
+                    </select>
+                </div>
+
+                <p style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted); line-height: 1.5;">
+                    Shows saved sightings relative to your physical location. Blue cone indicates your phone's heading.
+                </p>
+
+                <div class="radar-container" id="radar-wrapper">
+                    <canvas id="radar-canvas"></canvas>
+                    <div class="radar-overlay"></div>
+                    <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: 1rem; font-weight: bold; color: rgba(255,255,255,0.7);">N</div>
+                    <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 1rem; font-weight: bold; color: rgba(255,255,255,0.7);">S</div>
+                    <div style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 1rem; font-weight: bold; color: rgba(255,255,255,0.7);">E</div>
+                    <div style="position: absolute; left: 6px; top: 50%; transform: translateY(-50%); font-size: 1rem; font-weight: bold; color: rgba(255,255,255,0.7);">W</div>
+                </div>
+
+                <div id="radar-status" style="font-size: 1rem; font-weight: 800; color: var(--sci-amber); text-align: center; margin-top: 1.5rem;">
+                    AWAITING SAT LINK TO CALIBRATE GRID...
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: INVENTORY ================= -->
+        <section id="view-inv" class="view-section hide">
+            <div class="card" id="card-inv">
+                <div class="flex-between" style="border-bottom: 2px dashed var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+                    <h2 class="section-title" id="title-inv" style="border: none; padding: 0; margin: 0;">GEAR RECONCILIATION</h2>
+                    <button id="btn-cancel-inv" class="btn-small hide" style="border-color: var(--sci-red); color: var(--sci-red);" onclick="cancelEditMode('inv')">CANCEL EDIT</button>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>EQUIPMENT DESIGNATION</label>
+                        <input type="text" id="inv-item" placeholder="e.g. FLIR, TRAIL CAM">
+                    </div>
+                    <div class="form-group">
+                        <label>DEPLOYMENT ZONE</label>
+                        <input type="text" id="inv-zone" placeholder="e.g. SECTOR 7G">
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>TARGET QTY</label>
+                        <input type="number" id="inv-target" value="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>ACTUAL COUNT</label>
+                        <input type="number" id="inv-actual" value="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>VARIANCE</label>
+                        <input type="text" id="inv-variance" value="0" readonly>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>STATUS</label>
+                    <select id="inv-status">
+                        <option value="VERIFIED">🟢 VERIFIED (MATCH)</option>
+                        <option value="DEPLOYED">⚪ IN-FIELD (DEPLOYED)</option>
+                        <option value="DISCREPANCY">🔴 DISCREPANCY (MISSING/OVER)</option>
+                    </select>
+                </div>
+
+                <button id="btn-save-inv" class="btn double-tap-btn" style="border-color: var(--sci-blue); color: var(--sci-blue);" data-original-text="UPDATE MANIFEST">
+                    <svg style="width:1.5rem; height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span>UPDATE MANIFEST</span>
+                </button>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; color: var(--text-muted); border-bottom: 2px solid var(--border-main); padding-bottom: 0.5rem; margin-bottom: 1rem; text-transform: uppercase;">CYCLE COUNT LOG</h3>
+                <div id="inv-feed"></div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: SYSTEM ================= -->
+        <section id="view-sys" class="view-section hide">
+            <div class="card">
+                <h2 class="section-title" style="border-bottom: 2px dashed var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem;">SECURE ARCHIVE</h2>
+                <p style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+                    DATA IS VOLATILE. EXPORT JSON DOSSIER TO PRESERVE EVIDENCE ACROSS SESSIONS.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button onclick="exportDatabase()" class="btn">
+                        <svg style="width:1.5rem; height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        EXTRACT DOSSIER (.JSON)
+                    </button>
+
+                    <button onclick="copyToClipboard()" class="btn" style="background: transparent; border-style: dashed; color: var(--text-muted);">
+                        COPY RAW TEXT (FALLBACK)
+                    </button>
+                    
+                    <label class="btn" style="border-color: var(--sci-amber); color: var(--sci-amber);">
+                        <svg style="width:1.5rem; height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        LOAD PREVIOUS DOSSIER
+                        <input type="file" id="import-file" class="hide" accept=".json" onchange="importDatabase(event)">
+                    </label>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: var(--sci-red); background: rgba(239, 68, 68, 0.05);">
+                <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--sci-red); margin-top: 0; margin-bottom: 0.5rem;">CRITICAL: DESTROY EVIDENCE</h3>
+                <p style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); margin-bottom: 1.25rem;">PURGES ALL DATA FROM LOCAL MEMORY. NO RECOVERY.</p>
+                
+                <button id="btn-purge" class="btn btn-danger double-tap-btn" data-original-text="PURGE MEMORY">
+                    <svg style="width:1.5rem; height:1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>PURGE MEMORY</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav>
+        <button onclick="switchTab('obs')" id="tab-obs" class="tab-btn active">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            <span>SIGHTINGS</span>
+        </button>
+        <button onclick="switchTab('radar')" id="tab-radar" class="tab-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            <span>RADAR</span>
+        </button>
+        <button onclick="switchTab('inv')" id="tab-inv" class="tab-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <span>LOGISTICS</span>
+        </button>
+        <button onclick="switchTab('sys')" id="tab-sys" class="tab-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+            <span>ARCHIVE</span>
+        </button>
+    </nav>
+
+    <script>
+        // ================= STATE MANAGEMENT =================
+        const AppState = {
+            metadata: { version: "4.11_MAP_ENHANCED", session_start: new Date().toISOString(), nextSerial: 1 },
+            observations: [],
+            inventory: [],
+            gps: { lat: null, lng: null, alt: null, acc: null, status: 'SEARCHING' },
+            sensors: { azimuth: null },
+            lunar: { phase: '', illum: 0 }
+        };
+
+        const EditState = {
+            obsId: null,
+            invId: null,
+            obsOriginalData: null 
+        };
+
+        const getISOString = () => new Date().toISOString();
+        
+        function showAlert(msg, type = 'success') {
+            const el = document.getElementById('system-alert');
+            el.innerHTML = msg; el.className = `alert show alert-${type}`;
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => { el.className = 'alert'; }, 4500);
+        }
+
+        // ================= CASE NUMBER GENERATOR =================
+        function generateCaseNumber(typeStr) {
+            const date = new Date();
+            const yy = date.getFullYear().toString().substr(-2);
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            
+            const serial = String(AppState.metadata.nextSerial || 1).padStart(3, '0');
+            AppState.metadata.nextSerial = (AppState.metadata.nextSerial || 1) + 1;
+            
+            return `PSRG-${typeStr}-${yy}${mm}${dd}-${serial}`;
+        }
+
+        function syncHighestSerial() {
+            let highest = 0;
+            [...AppState.observations, ...AppState.inventory].forEach(item => {
+                const parts = item.id.split('-');
+                if(parts.length === 4) {
+                    const num = parseInt(parts[3], 10);
+                    if(!isNaN(num) && num > highest) highest = num;
+                }
+            });
+            AppState.metadata.nextSerial = highest + 1;
+        }
+
+        // ================= MAP ROUTING (V4.11 UPDATED) =================
+        function openMap(lat, lng, caseId, label, e) {
+            if (e) e.stopPropagation();
+            
+            // Format label for the map pin (e.g. "PSRG-CASE-1234: TRACK FOUND")
+            const queryLabel = encodeURIComponent(`${caseId}: ${label}`);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
+            if (isIOS) {
+                // Apple Maps: q sets the pin label, t=m forces standard 2D view
+                window.location.href = `https://maps.apple.com/?q=${queryLabel}&ll=${lat},${lng}&t=m`;
+            } else {
+                // Google Maps: Uses the search API to place a labeled marker in 2D
+                window.location.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${queryLabel}`;
+            }
+        }
+
+        // ================= DATE, TIME & OFFLINE MOON PHASE =================
+        function setLocalDateTimeFields() {
+            const now = new Date();
+            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            const localTime = now.toTimeString().substring(0,5);
+            document.getElementById('obs-date').value = localDate;
+            document.getElementById('obs-time').value = localTime;
+            calculateMoonPhase(now);
+        }
+
+        function calculateMoonPhase(date) {
+            let year = date.getFullYear(), month = date.getMonth() + 1, day = date.getDate();
+            if (month < 3) { year--; month += 12; }
+            let a = Math.floor(year / 100), b = Math.floor(a / 4), c = 2 - a + b;
+            let e = Math.floor(365.25 * (year + 4716)), f = Math.floor(30.6001 * (month + 1));
+            let jd = c + day + e + f - 1524.5;
+            let daysSinceNew = jd - 2451549.5;
+            let newMoons = daysSinceNew / 29.53;
+            let phase = newMoons - Math.floor(newMoons);
+            let age = phase * 29.53;
+            let illum = Math.round((0.5 * (1 - Math.cos(phase * 2 * Math.PI))) * 100);
+            
+            let phaseName = "NEW";
+            if (age < 1.84) phaseName = "NEW";
+            else if (age < 5.53) phaseName = "WAX CRESCENT";
+            else if (age < 9.22) phaseName = "FIRST QTR";
+            else if (age < 12.91) phaseName = "WAX GIBBOUS";
+            else if (age < 16.61) phaseName = "FULL";
+            else if (age < 20.30) phaseName = "WAN GIBBOUS";
+            else if (age < 23.99) phaseName = "LAST QTR";
+            else if (age < 27.68) phaseName = "WAN CRESCENT";
+            
+            AppState.lunar = { phase: phaseName, illum: illum };
+            document.getElementById('hw-moon').innerText = `MOON: ${phaseName} ${illum}%`;
+        }
+
+        // ================= HW SENSORS (EDGE / CHROMIUM OPTIMIZED) =================
+        function initSensors() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(state => {
+                    if (state === 'granted') startCompass();
+                    else showAlert('COMPASS ACCESS DENIED.', 'error');
+                }).catch(console.error);
+            } else {
+                startCompass();
+            }
+            document.getElementById('btn-init-sensors').style.display = 'none';
+        }
+
+        function startCompass() {
+            if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+            showAlert('HW SENSORS ONLINE.');
+        }
+
+        function handleOrientation(event) {
+            let heading = null;
+            if (event.webkitCompassHeading) {
+                heading = event.webkitCompassHeading; 
+            } else if (event.alpha !== null) {
+                heading = 360 - event.alpha; 
+            }
+            
+            if (heading !== null) {
+                AppState.sensors.azimuth = Math.round(heading);
+                document.getElementById('hw-heading').innerText = `HDG: ${AppState.sensors.azimuth}°`;
+                if(document.getElementById('tab-radar').classList.contains('active')) {
+                    drawRadar(); 
+                }
+            }
+        }
+
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                function updateBattery() {
+                    const level = Math.round(battery.level * 100);
+                    const batEl = document.getElementById('hw-battery');
+                    batEl.innerText = `BAT: ${level}%`;
+                    batEl.style.color = (level <= 20 && !battery.charging) ? 'var(--sci-red)' : 'var(--sci-amber)';
+                }
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+            }).catch(() => document.getElementById('hw-battery').innerText = 'BAT: N/A (OS BLOCKED)');
+        } else { document.getElementById('hw-battery').innerText = 'BAT: N/A (OS BLOCKED)'; }
+
+
+        // ================= GPS TELEMETRY & COORDINATE CONVERSION =================
+        setInterval(() => { document.getElementById('sys-clock').innerText = new Date().toISOString().substring(11, 19) + 'Z'; }, 1000);
+
+        function convertToDMS(deg, isLat) {
+            let d = Math.abs(deg); let degInt = Math.floor(d); let minFloat = (d - degInt) * 60; let minInt = Math.floor(minFloat);
+            let secFloat = (minFloat - minInt) * 60; let dir = isLat ? (deg >= 0 ? "N" : "S") : (deg >= 0 ? "E" : "W");
+            return `${degInt}°${minInt}'${secFloat.toFixed(1)}"${dir}`;
+        }
+
+        function initGPS() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const coords = position.coords;
+                        let altitudeFeet = null;
+                        if (coords.altitude !== null) altitudeFeet = Math.round(coords.altitude * 3.28084);
+
+                        AppState.gps = {
+                            lat: coords.latitude.toFixed(5), lng: coords.longitude.toFixed(5),
+                            alt: altitudeFeet, acc: Math.round(coords.accuracy), status: 'LOCKED'
+                        };
+                        
+                        const elevInput = document.getElementById('obs-elevation');
+                        if (altitudeFeet !== null && !elevInput.value) {
+                            elevInput.value = altitudeFeet;
+                            elevInput.classList.remove('field-updated'); void elevInput.offsetWidth; elevInput.classList.add('field-updated');
+                        }
+
+                        updateGPSUI();
+                        if(document.getElementById('tab-radar').classList.contains('active')) drawRadar();
+                    },
+                    (error) => { AppState.gps.status = 'ERROR'; updateGPSUI(); },
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 27000 }
+                );
+            }
+        }
+
+        function updateGPSUI() {
+            const statusEl = document.getElementById('gps-status'), dmsEl = document.getElementById('gps-dms');
+            if (AppState.gps.status === 'LOCKED') {
+                statusEl.innerHTML = `DD: ${AppState.gps.lat}, ${AppState.gps.lng} <span style="color:var(--text-muted); font-size:0.65rem;">(±${AppState.gps.acc}m)</span>`;
+                statusEl.style.color = 'var(--sci-green)'; statusEl.classList.remove('pulse');
+                dmsEl.innerText = `DMS: ${convertToDMS(AppState.gps.lat, true)} ${convertToDMS(AppState.gps.lng, false)}`;
+            } else {
+                statusEl.innerText = 'NO SAT LINK'; statusEl.style.color = 'var(--sci-red)'; statusEl.classList.add('pulse');
+                dmsEl.innerText = '';
+            }
+        }
+
+        // ================= OFFLINE TACTICAL RADAR MATH & DRAWING =================
+        function toRad(value) { return value * Math.PI / 180; }
+        function toDeg(value) { return value * 180 / Math.PI; }
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; const f1 = toRad(lat1), f2 = toRad(lat2);
+            const df = toRad(lat2 - lat1), dl = toRad(lon2 - lon1);
+            const a = Math.sin(df/2) * Math.sin(df/2) + Math.cos(f1) * Math.cos(f2) * Math.sin(dl/2) * Math.sin(dl/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; 
+        }
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const f1 = toRad(lat1), f2 = toRad(lat2), dl = toRad(lon2 - lon1);
+            const y = Math.sin(dl) * Math.cos(f2), x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+            const brng = Math.atan2(y, x); return (toDeg(brng) + 360) % 360;
+        }
+
+        function drawRadar() {
+            const canvas = document.getElementById('radar-canvas'), wrapper = document.getElementById('radar-wrapper'), statusEl = document.getElementById('radar-status');
+            const size = wrapper.clientWidth; canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, size, size);
+
+            if (AppState.gps.status !== 'LOCKED') { statusEl.innerText = "AWAITING SAT LINK TO CALIBRATE GRID..."; return; }
+            const rangeMeters = parseInt(document.getElementById('radar-range').value), center = size / 2;
+            const curLat = parseFloat(AppState.gps.lat), curLng = parseFloat(AppState.gps.lng);
+
+            ctx.strokeStyle = 'rgba(163, 230, 53, 0.2)'; ctx.lineWidth = 1;
+            [0.25, 0.5, 0.75].forEach(scale => { ctx.beginPath(); ctx.arc(center, center, (center * scale), 0, 2 * Math.PI); ctx.stroke(); });
+
+            if (AppState.sensors.azimuth !== null) {
+                const headingRad = toRad(AppState.sensors.azimuth - 90), coneAngle = toRad(40);
+                ctx.fillStyle = 'rgba(125, 211, 252, 0.25)'; ctx.beginPath(); ctx.moveTo(center, center);
+                ctx.arc(center, center, center, headingRad - coneAngle/2, headingRad + coneAngle/2); ctx.lineTo(center, center); ctx.fill();
+            }
+
+            let visibleCount = 0;
+            AppState.observations.forEach(obs => {
+                if (!obs.gps || !obs.gps.lat || !obs.gps.lng) return;
+                const obsLat = parseFloat(obs.gps.lat), obsLng = parseFloat(obs.gps.lng);
+                const dist = calculateDistance(curLat, curLng, obsLat, obsLng);
+                if (dist > rangeMeters) return; 
+                
+                visibleCount++;
+                const bearingDeg = calculateBearing(curLat, curLng, obsLat, obsLng), bearingRad = toRad(bearingDeg - 90); 
+                const distPx = (dist / rangeMeters) * center, x = center + (distPx * Math.cos(bearingRad)), y = center + (distPx * Math.sin(bearingRad));
+
+                ctx.fillStyle = 'var(--sci-amber)'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fill();
+                ctx.fillStyle = 'var(--text-bright)'; ctx.font = "bold 12px sans-serif"; ctx.fillText(obs.id.split('-')[3], x + 8, y + 4); 
+            });
+
+            ctx.fillStyle = 'var(--sci-green)'; ctx.beginPath(); ctx.arc(center, center, 6, 0, 2 * Math.PI); ctx.fill();
+            if (AppState.gps.acc) {
+                const accPx = (AppState.gps.acc / rangeMeters) * center;
+                ctx.strokeStyle = 'rgba(163, 230, 53, 0.4)'; ctx.beginPath(); ctx.arc(center, center, accPx, 0, 2 * Math.PI); ctx.stroke();
+            }
+            statusEl.innerText = `GRID ALIGNED. ${visibleCount} TARGET(S) IN RANGE.`;
+        }
+
+        // ================= UI NAVIGATION =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hide'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.remove('hide');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.querySelector('main').scrollTo({ top: 0 });
+            if (tabId === 'radar') setTimeout(drawRadar, 50); 
+        }
+
+        window.addEventListener('resize', () => { if(document.getElementById('tab-radar').classList.contains('active')) drawRadar(); });
+
+        // ================= ENTRY EXPANSION (ACCORDION) =================
+        function toggleExpand(elementId) {
+            const el = document.getElementById(elementId);
+            if(el.classList.contains('expanded')) {
+                el.classList.remove('expanded');
+            } else {
+                document.querySelectorAll('.log-entry.expanded').forEach(openEl => openEl.classList.remove('expanded'));
+                el.classList.add('expanded');
+            }
+        }
+
+        // ================= EDIT & DELETE LOGIC =================
+        function loadObsForEdit(id, e) {
+            e.stopPropagation(); 
+            const obs = AppState.observations.find(o => o.id === id);
+            if(!obs) return;
+
+            EditState.obsId = id;
+            EditState.obsOriginalData = { gps: obs.gps, lunar: obs.lunar, azimuth: obs.azimuth };
+            
+            document.getElementById('obs-reporter').value = obs.reporter;
+            document.getElementById('obs-media').value = obs.media;
+            document.getElementById('obs-terrain').value = obs.terrain;
+            document.getElementById('obs-bio').value = obs.bio;
+            document.getElementById('obs-elevation').value = obs.elevation === 'N/A' ? '' : obs.elevation;
+            document.getElementById('obs-temp').value = obs.temp === 'N/A' ? '' : obs.temp;
+            document.getElementById('obs-conditions').value = obs.conditions;
+            document.getElementById('obs-date').value = obs.date;
+            document.getElementById('obs-time').value = obs.time;
+            document.getElementById('obs-notes').value = obs.notes;
+            
+            document.getElementById('obs-attach-gps').checked = false; 
+            document.getElementById('label-obs-gps').innerText = 'OVERWRITE GPS WITH CURRENT LOCATION';
+            
+            const btn = document.getElementById('btn-save-obs');
+            btn.querySelector('span').innerText = `UPDATE [ ${id.split('-')[3]} ]`;
+            btn.setAttribute('data-original-text', `UPDATE [ ${id.split('-')[3]} ]`);
+            
+            document.getElementById('title-obs').innerText = `EDITING: ${id}`;
+            document.getElementById('card-obs').classList.add('edit-mode');
+            document.getElementById('btn-cancel-obs').classList.remove('hide');
+            
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteObs(id, e) {
+            e.stopPropagation();
+            if(confirm(`WARNING: Permanently delete record ${id}?`)) {
+                AppState.observations = AppState.observations.filter(o => o.id !== id);
+                renderObservations();
+                showAlert(`${id} PURGED FROM RECORDS.`, 'warning');
+            }
+        }
+
+        function cancelEditMode(type) {
+            if(type === 'obs') {
+                EditState.obsId = null;
+                EditState.obsOriginalData = null;
+                document.getElementById('obs-bio').value = '';
+                document.getElementById('obs-notes').value = '';
+                setLocalDateTimeFields();
+                document.getElementById('obs-attach-gps').checked = true;
+                document.getElementById('label-obs-gps').innerText = 'ATTACH SENSORS & GPS';
+                
+                const btn = document.getElementById('btn-save-obs');
+                btn.querySelector('span').innerText = `ARCHIVE DATASET`;
+                btn.setAttribute('data-original-text', `ARCHIVE DATASET`);
+                
+                document.getElementById('title-obs').innerText = `FIELD OBSERVATION`;
+                document.getElementById('card-obs').classList.remove('edit-mode');
+                document.getElementById('btn-cancel-obs').classList.add('hide');
+            } else {
+                EditState.invId = null;
+                document.getElementById('inv-item').value = '';
+                document.getElementById('inv-target').value = '1';
+                document.getElementById('inv-actual').value = '1';
+                calculateVariance();
+                
+                const btn = document.getElementById('btn-save-inv');
+                btn.querySelector('span').innerText = `UPDATE MANIFEST`;
+                btn.setAttribute('data-original-text', `UPDATE MANIFEST`);
+                
+                document.getElementById('title-inv').innerText = `GEAR RECONCILIATION`;
+                document.getElementById('card-inv').classList.remove('edit-mode');
+                document.getElementById('btn-cancel-inv').classList.add('hide');
+            }
+        }
+
+        // ================= INVENTORY LOGIC =================
+        function calculateVariance() {
+            const target = parseInt(document.getElementById('inv-target').value) || 0;
+            const actual = parseInt(document.getElementById('inv-actual').value) || 0;
+            const variance = actual - target;
+            const varianceEl = document.getElementById('inv-variance'), statusEl = document.getElementById('inv-status');
+            varianceEl.value = (variance > 0 ? '+' : '') + variance;
+            if (variance === 0) { varianceEl.style.color = 'var(--sci-green)'; statusEl.value = 'VERIFIED'; }
+            else { varianceEl.style.color = 'var(--sci-red)'; statusEl.value = 'DISCREPANCY'; }
+        }
+        document.getElementById('inv-target').addEventListener('input', calculateVariance);
+        document.getElementById('inv-actual').addEventListener('input', calculateVariance);
+
+        function loadInvForEdit(id, e) {
+            e.stopPropagation();
+            const inv = AppState.inventory.find(i => i.id === id);
+            if(!inv) return;
+            EditState.invId = id;
+            
+            document.getElementById('inv-item').value = inv.item;
+            document.getElementById('inv-zone').value = inv.zone;
+            document.getElementById('inv-target').value = inv.target;
+            document.getElementById('inv-actual').value = inv.actual;
+            document.getElementById('inv-status').value = inv.status;
+            calculateVariance();
+            
+            const btn = document.getElementById('btn-save-inv');
+            btn.querySelector('span').innerText = `UPDATE [ ${id.split('-')[3]} ]`;
+            btn.setAttribute('data-original-text', `UPDATE [ ${id.split('-')[3]} ]`);
+            
+            document.getElementById('title-inv').innerText = `EDITING: ${id}`;
+            document.getElementById('card-inv').classList.add('edit-mode');
+            document.getElementById('btn-cancel-inv').classList.remove('hide');
+            
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteInv(id, e) {
+            e.stopPropagation();
+            if(confirm(`WARNING: Permanently delete manifest item ${id}?`)) {
+                AppState.inventory = AppState.inventory.filter(i => i.id !== id);
+                renderInventory();
+                showAlert(`${id} REMOVED FROM MANIFEST.`, 'warning');
+            }
+        }
+
+        // ================= DOUBLE TAP LOGIC =================
+        function setupDoubleTapButtons() {
+            document.querySelectorAll('.double-tap-btn').forEach(btn => {
+                let tapCount = 0, timer = null;
+                
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault(); tapCount++;
+                    const originalText = btn.getAttribute('data-original-text');
+                    const isDanger = btn.classList.contains('btn-danger');
+
+                    if (tapCount === 1) {
+                        btn.querySelector('span').innerText = "TAP TO CONFIRM"; btn.classList.add('btn-amber');
+                        if (isDanger) btn.classList.remove('btn-danger');
+                        timer = setTimeout(() => { tapCount = 0; btn.querySelector('span').innerText = originalText; btn.classList.remove('btn-amber'); if (isDanger) btn.classList.add('btn-danger'); }, 3000);
+                    } else if (tapCount === 2) {
+                        clearTimeout(timer); tapCount = 0;
+                        btn.querySelector('span').innerText = "EXECUTED"; btn.classList.remove('btn-amber'); btn.style.backgroundColor = 'var(--sci-green)'; btn.style.color = '#000';
+                        
+                        if (btn.id === 'btn-save-obs') saveObservation(); 
+                        if (btn.id === 'btn-save-inv') saveInventory(); 
+                        if (btn.id === 'btn-purge') purgeDatabase();
+                        
+                        setTimeout(() => { btn.querySelector('span').innerText = btn.getAttribute('data-original-text'); btn.style.backgroundColor = ''; btn.style.color = ''; if (isDanger) btn.classList.add('btn-danger'); }, 2000);
+                    }
+                });
+            });
+        }
+
+        // ================= DATA SAVING & RENDERING =================
+        function saveObservation() {
+            const bio = document.getElementById('obs-bio').value.trim(), notes = document.getElementById('obs-notes').value.trim();
+            if (!bio && !notes) { showAlert('CANNOT SAVE EMPTY DATASET.', 'error'); return; }
+
+            const wantsNewGPS = document.getElementById('obs-attach-gps').checked;
+            let finalGPS = wantsNewGPS && AppState.gps.status === 'LOCKED' ? { lat: AppState.gps.lat, lng: AppState.gps.lng, alt: AppState.gps.alt, acc: AppState.gps.acc } : null;
+            let finalLunar = AppState.lunar;
+            let finalAzimuth = AppState.sensors.azimuth;
+            
+            if (EditState.obsId && !wantsNewGPS) {
+                finalGPS = EditState.obsOriginalData.gps;
+                finalLunar = EditState.obsOriginalData.lunar;
+                finalAzimuth = EditState.obsOriginalData.azimuth;
+            }
+
+            const entry = {
+                id: EditState.obsId || generateCaseNumber('CASE'),
+                timestamp: getISOString(),
+                reporter: document.getElementById('obs-reporter').value,
+                media: document.getElementById('obs-media').value,
+                terrain: document.getElementById('obs-terrain').value || 'UNKNOWN',
+                bio: bio || 'GENERAL OBS',
+                elevation: document.getElementById('obs-elevation').value || 'N/A',
+                temp: document.getElementById('obs-temp').value || 'N/A',
+                conditions: document.getElementById('obs-conditions').value,
+                date: document.getElementById('obs-date').value,
+                time: document.getElementById('obs-time').value,
+                notes: notes,
+                azimuth: finalAzimuth,
+                lunar: finalLunar,
+                gps: finalGPS
+            };
+
+            if (EditState.obsId) {
+                const index = AppState.observations.findIndex(o => o.id === EditState.obsId);
+                if (index !== -1) AppState.observations[index] = entry;
+                showAlert(`CASE [${entry.id}] UPDATED SUCCESSFULLY.`);
+                cancelEditMode('obs');
+            } else {
+                AppState.observations.unshift(entry);
+                document.getElementById('obs-bio').value = ''; document.getElementById('obs-notes').value = '';
+                setLocalDateTimeFields(); 
+                showAlert(`NEW CASE [${entry.id}] ARCHIVED.`);
+            }
+            renderObservations(); 
+        }
+
+        function renderObservations() {
+            const feed = document.getElementById('obs-feed');
+            if (AppState.observations.length === 0) { feed.innerHTML = '<div style="color: var(--text-muted); font-size: 1rem; font-weight: bold; text-align: center; padding: 2rem;">// NO CASES ARCHIVED //</div>'; return; }
+
+            feed.innerHTML = AppState.observations.map(obs => `
+                <div class="log-entry" id="obs-row-${obs.id}" onclick="toggleExpand('obs-row-${obs.id}')">
+                    <div class="log-entry-content">
+                        <div class="flex-between log-meta">
+                            <span style="font-size:1.1rem; color:var(--sci-blue);">${obs.id}</span>
+                            <span>${obs.timestamp.substring(11, 16)}Z</span>
+                        </div>
+                        <div style="font-weight: 900; font-size: 1.25rem; color: var(--text-bright); margin-bottom: 0.5rem; text-transform: uppercase;">
+                            ${obs.bio} <span style="color:var(--text-muted)">@</span> ${obs.terrain}
+                        </div>
+                        
+                        <div class="log-data-grid">
+                            <span>OP:</span> <strong>${obs.reporter}</strong>
+                            <span>MEDIA:</span> <strong>${obs.media}</strong>
+                            <span>ENV:</span> <strong>${obs.temp}°F, ${obs.conditions}, ${obs.elevation}FT</strong>
+                            <span>LOCAL:</span> <strong>${obs.date} ${obs.time}</strong>
+                            
+                            ${obs.gps ? `
+                            <span>GPS:</span> 
+                            <strong style="display:flex; flex-direction:column; gap:0.4rem;">
+                                <span style="color:var(--sci-green)">${obs.gps.lat}, ${obs.gps.lng}</span>
+                                <div style="display:flex; gap:0.75rem; align-items:center;">
+                                    <button class="btn-small" onclick="openMap('${obs.gps.lat}', '${obs.gps.lng}', '${obs.id}', '${obs.bio}', event)" title="Opens native map app (Gaia/Google/Apple)">
+                                        <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                                        [ MAP ]
+                                    </button>
+                                </div>
+                            </strong>
+                            ` : `<span>GPS:</span> <strong>N/A</strong>`}
+                        </div>
+                        
+                        ${obs.notes ? `<div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed var(--border-subtle); color: var(--text-bright); font-size: 1rem; white-space: pre-wrap;">${obs.notes}</div>` : ''}
+                        
+                        <div class="expand-indicator">▼ TAP TO EXPAND MENU</div>
+                    </div>
+                    
+                    <div class="log-actions">
+                        ${obs.gps ? `
+                            <button class="btn" style="border-color: var(--border-main); color: var(--text-bright); padding:0.75rem;" onclick="openMap('${obs.gps.lat}', '${obs.gps.lng}', '${obs.id}', '${obs.bio}', event)">
+                                <svg style="width:1.2rem; height:1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                                NAVIGATE TO CASE
+                            </button>
+                        ` : ''}
+                        <button class="btn" style="border-color: var(--sci-blue); color: var(--sci-blue); padding:0.75rem;" onclick="loadObsForEdit('${obs.id}', event)">✏️ EDIT RECORD</button>
+                        <button class="btn btn-danger" style="padding:0.75rem;" onclick="deleteObs('${obs.id}', event)">🗑️ DELETE RECORD</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveInventory() {
+            const item = document.getElementById('inv-item').value.trim();
+            if (!item) { showAlert('EQUIPMENT DESIGNATION REQUIRED.', 'error'); return; }
+            
+            const entry = { 
+                id: EditState.invId || generateCaseNumber('LOG'), 
+                timestamp: getISOString(), 
+                item: item.toUpperCase(), 
+                zone: document.getElementById('inv-zone').value.trim().toUpperCase() || 'GENERAL', 
+                target: parseInt(document.getElementById('inv-target').value) || 0, 
+                actual: parseInt(document.getElementById('inv-actual').value) || 0, 
+                variance: document.getElementById('inv-variance').value, 
+                status: document.getElementById('inv-status').value 
+            };
+            
+            if (EditState.invId) {
+                const index = AppState.inventory.findIndex(i => i.id === EditState.invId);
+                if (index !== -1) AppState.inventory[index] = entry;
+                showAlert(`LOG [${entry.id}] UPDATED SUCCESSFULLY.`);
+                cancelEditMode('inv');
+            } else {
+                AppState.inventory.unshift(entry);
+                document.getElementById('inv-item').value = ''; document.getElementById('inv-target').value = '1'; document.getElementById('inv-actual').value = '1';
+                calculateVariance(); 
+                showAlert(`NEW LOG [${entry.id}] MANIFESTED.`);
+            }
+            renderInventory(); 
+        }
+
+        function renderInventory() {
+            const feed = document.getElementById('inv-feed');
+            if (AppState.inventory.length === 0) { feed.innerHTML = '<div style="color: var(--text-muted); font-size: 1rem; font-weight: bold; text-align: center; padding: 2rem;">// NO MANIFEST DATA //</div>'; return; }
+            
+            feed.innerHTML = AppState.inventory.map(inv => {
+                let statusColor = 'var(--text-muted)';
+                if (inv.status === 'VERIFIED') statusColor = 'var(--sci-green)'; 
+                if (inv.status === 'DISCREPANCY') statusColor = 'var(--sci-red)';
+                
+                return `
+                <div class="log-entry" id="inv-row-${inv.id}" onclick="toggleExpand('inv-row-${inv.id}')" style="border-left-color: ${statusColor}">
+                    <div class="log-entry-content">
+                        <div class="flex-between log-meta">
+                            <span style="font-size:1rem; color:var(--text-bright);">${inv.id}</span>
+                            <span style="color: ${statusColor}">${inv.status}</span>
+                        </div>
+                        <div style="font-weight: 900; font-size: 1.1rem; color: var(--text-bright); margin-bottom: 0.75rem; text-transform: uppercase;">
+                            ${inv.item} <span style="color: var(--text-muted); font-size: 0.9rem; font-weight: normal;">[${inv.zone}]</span>
+                        </div>
+                        <div class="log-data-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.75rem; text-align: center;">
+                            <div style="background: var(--bg-base); padding: 0.5rem; border-radius: 4px;"><div style="font-size: 0.8rem; color: var(--sci-blue); margin-bottom: 0.25rem; font-weight: bold;">TARGET</div><strong style="font-size: 1.1rem;">${inv.target}</strong></div>
+                            <div style="background: var(--bg-base); padding: 0.5rem; border-radius: 4px;"><div style="font-size: 0.8rem; color: var(--sci-blue); margin-bottom: 0.25rem; font-weight: bold;">ACTUAL</div><strong style="font-size: 1.1rem;">${inv.actual}</strong></div>
+                            <div style="background: var(--bg-base); padding: 0.5rem; border-radius: 4px;"><div style="font-size: 0.8rem; color: var(--sci-blue); margin-bottom: 0.25rem; font-weight: bold;">VAR</div><strong style="font-size: 1.1rem; color: ${inv.variance === '0' ? 'var(--sci-green)' : 'var(--sci-red)'}">${inv.variance}</strong></div>
+                        </div>
+                        <div class="expand-indicator">▼ TAP TO EDIT</div>
+                    </div>
+                    
+                    <div class="log-actions">
+                        <button class="btn" style="border-color: var(--sci-blue); color: var(--sci-blue); padding:0.75rem;" onclick="loadInvForEdit('${inv.id}', event)">✏️ EDIT MANIFEST</button>
+                        <button class="btn btn-danger" style="padding:0.75rem;" onclick="deleteInv('${inv.id}', event)">🗑️ DELETE RECORD</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ================= DATABASE I/O =================
+        function exportDatabase() {
+            try {
+                const dataStr = JSON.stringify(AppState, null, 2); const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = `PSRG_Tactical_Log_${getISOString().replace(/[:.]/g, '-')}.json`;
+                document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 150);
+                showAlert('DOSSIER EXTRACTED SUCCESSFULLY.');
+            } catch (error) { showAlert('EXPORT BLOCKED.', 'error'); }
+        }
+        function copyToClipboard() {
+            const dataStr = JSON.stringify(AppState, null, 2); const textArea = document.createElement("textarea"); textArea.value = dataStr; textArea.style.position = "fixed"; document.body.appendChild(textArea);
+            textArea.focus(); textArea.select(); const successful = document.execCommand('copy'); document.body.removeChild(textArea);
+            successful ? showAlert('RAW DATA COPIED TO CLIPBOARD.') : showAlert('CLIPBOARD ACCESS DENIED.', 'error');
+        }
+        function importDatabase(event) {
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.observations || imported.inventory) { 
+                        AppState.observations = imported.observations || []; 
+                        AppState.inventory = imported.inventory || []; 
+                        syncHighestSerial();
+                        renderObservations(); renderInventory(); showAlert('PREVIOUS DOSSIER LOADED.'); 
+                    } else { showAlert('CORRUPT DATASET.', 'error'); }
+                } catch (err) { showAlert('PARSE FAILED.', 'error'); }
+            }; reader.readAsText(file); event.target.value = '';
+        }
+        function purgeDatabase() { AppState.observations = []; AppState.inventory = []; AppState.metadata.nextSerial = 1; renderObservations(); renderInventory(); showAlert('ALL LOCAL EVIDENCE DESTROYED.', 'warning'); }
+
+        // ================= INIT =================
+        document.addEventListener('DOMContentLoaded', () => { initGPS(); setLocalDateTimeFields(); setupDoubleTapButtons(); renderObservations(); renderInventory(); calculateVariance(); syncHighestSerial(); });
+    </script>
+</body>
+</html>
+
+
