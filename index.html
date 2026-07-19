@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pappy Squatch Research Group | Ahtanum, WA</title>
+    <title>PSRG Home</title>
     
     <!-- Google Fonts for that rugged, vintage feel -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,14 +59,13 @@
     <!-- Navigation -->
     <nav class="bg-forest text-cream shadow-lg sticky top-0 z-50">
         <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
-            <div class="flex justify-between h-20 lg:h-24 items-center transition-all duration-300">
+            <div class="flex justify-between h-20 lg:h-24 items-center duration-300">
                 <!-- Logo & Brand Name -->
                 <div class="flex-shrink-0 flex items-center gap-3 lg:gap-4">
                     
                     <img src="logo.png" 
                          alt="Pappy Squatch Logo" 
-                         class="squatch-logo h-32 w-32 lg:h-20 lg:w-20 object-contain rounded-full transition-all duration-300"
-                         onerror="this.style.display='none'; document.getElementById('nav-fallback').style.display='flex';">
+                         class="squatch-logo h-16 w-16 lg:h-15 lg:w-15 object-contain rounded-full duration-300">
                     
                     <div id="nav-fallback" class="logo-fallback hidden h-14 w-14 lg:h-16 lg:w-16 bg-sunset rounded-full flex items-center justify-center font-heading font-bold text-xl lg:text-2xl shadow-inner">
                         PS
@@ -113,20 +112,14 @@
         
         <div class="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-24 lg:py-32 flex flex-col items-center text-center">
             
-            <div class="mb-8 lg:mb-12 rounded-full shadow-2xl inline-block transform hover:scale-105 transition-transform duration-500">
+            <div class="rounded-full shadow-2xl inline-block">
                  
                  <!-- Main Hero Logo (Scales up significantly on desktop) -->
                  <img src="logo.png" 
                       alt="Pappy Squatch Logo Large" 
-                      class="squatch-logo h-48 w-48 sm:h-64 sm:w-64 lg:h-80 lg:w-80 xl:h-[26rem] xl:w-[26rem] object-contain rounded-full transition-all duration-500"
-                      onerror="this.style.display='none'; document.getElementById('hero-fallback').style.display='flex';">
+                      class="squatch-logo h-48 w-48 sm:h-64 sm:w-64 lg:h-80 lg:w-80 xl:h-[26rem] xl:w-[26rem] object-contain rounded-full">
                       
-                 <!-- Fallback interactive upload button -->
-                 <label id="hero-fallback" class="logo-fallback hidden h-48 w-48 sm:h-64 sm:w-64 lg:h-80 lg:w-80 xl:h-[26rem] xl:w-[26rem] bg-forest rounded-full flex-col items-center justify-center cursor-pointer hover:bg-forest-light transition-all duration-500 text-cream text-center p-4">
-                     <i class="fa-solid fa-image text-4xl lg:text-6xl mb-3 text-sunset"></i>
-                     <span class="font-heading text-lg lg:text-2xl font-bold">Load Logo</span>
-                     <span class="text-xs lg:text-sm opacity-75 mt-1 font-body">Click to preview image</span>
-                     <input type="file" id="logo-upload" class="hidden" accept="image/*">
+                
                  </label>
             </div>
 
@@ -261,7 +254,7 @@
                     <p class="mt-4 lg:mt-6 text-lg lg:text-xl text-bark/80 max-w-3xl mx-auto">Help us piece together the puzzle. Provide as much detail as you can remember.<i>This currently does not work.</i></p>
                 </div>
 
-                <form id="sighting-form" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-8 sm:p-12 lg:p-16 relative">
+                <form action="https://formspree.io/f/meeygrre" method="POST" id="sighting-form" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-8 sm:p-12 lg:p-16 relative">
                     
                     <!-- Section 1: Encounter Details -->
                     <div class="mb-12 lg:mb-16">
