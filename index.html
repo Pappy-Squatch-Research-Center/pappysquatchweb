@@ -263,27 +263,27 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="date">Date of Encounter <span class="text-red-500">*</span></label>
-                                <input type="date" id="date" required class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
+                                <input type="date" id="date" name="date" data-fs-field required class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="time">Approximate Time</label>
-                                <input type="time" id="time" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
+                                <input type="time" id="time" name="time" data-fs-field class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
                             </div>
                         </div>
 
                         <div class="mb-6 lg:mb-8">
                             <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="location">Location (Be as specific as possible) <span class="text-red-500">*</span></label>
-                            <input type="text" id="location" required placeholder="e.g., Ahtanum State Forest, near Darland Mountain, or GPS coordinates" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
+                            <input type="text" id="location" name="location" data-fs-field required placeholder="e.g., Ahtanum State Forest, near Darland Mountain, or GPS coordinates" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="weather">Weather Conditions</label>
-                                <input type="text" id="weather" placeholder="e.g., Overcast, raining, clear night" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
+                                <input type="text" id="weather" name="weather" data-fs-field placeholder="e.g., Overcast, raining, clear night" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="distance">Estimated Distance</label>
-                                <input type="text" id="distance" placeholder="e.g., 50 yards, right outside the tent" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
+                                <input type="text" id="distance" name="distance" data-fs-field placeholder="e.g., 50 yards, right outside the tent" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent">
                             </div>
                         </div>
                     </div>
@@ -295,7 +295,7 @@
                         <div class="mb-6 lg:mb-8">
                             <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="description">Detailed Description <span class="text-red-500">*</span></label>
                             <p class="text-xs lg:text-sm text-gray-500 mb-3">What did you see, hear, or smell? Describe physical characteristics, movement, or vocalizations.</p>
-                            <textarea id="description" required rows="8" placeholder="I was setting up camp when I smelled something like..." class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent"></textarea>
+                            <textarea id="description" name="description" data-fs-field required rows="8" placeholder="I was setting up camp when I smelled something like..." class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent"></textarea>
                         </div>
 
                         <div class="mb-6">
@@ -304,7 +304,7 @@
                                 <i class="fa-solid fa-cloud-arrow-up text-5xl lg:text-6xl text-sunset mb-4"></i>
                                 <p class="text-base lg:text-lg font-bold text-forest">Click to upload files or drag and drop</p>
                                 <p class="text-sm text-gray-500 mt-2">Accepts images, audio files, or short videos.</p>
-                                <input type="file" id="evidence" multiple accept="image/*,audio/*,video/*" class="w-full h-full opacity-0 absolute inset-0 cursor-pointer">
+                                <input type="file" id="evidence" name="evidence" data-fs-field multiple accept="image/*,audio/*,video/*" class="w-full h-full opacity-0 absolute inset-0 cursor-pointer">
                             </div>
                         </div>
                     </div>
@@ -322,18 +322,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-2">
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="name">Name / Alias <span class="text-xs lg:text-sm font-normal text-gray-500 italic">(Optional)</span></label>
-                                <input type="text" id="name" placeholder="John Doe or 'Hunter76'" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent bg-white">
+                                <input type="text" id="name" name="name" data-fs-field placeholder="John Doe or 'Hunter76'" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent bg-white">
                             </div>
                             <div>
                                 <label class="block text-sm lg:text-base font-bold text-bark mb-2" for="email">Email Address <span class="text-xs lg:text-sm font-normal text-gray-500 italic">(Optional)</span></label>
-                                <input type="email" id="email" placeholder="Only used if you want us to follow up" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent bg-white">
+                                <input type="email" id="email" name="email" data-fs-field placeholder="Only used if you want us to follow up" class="w-full px-4 py-3 lg:py-4 lg:text-lg rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sunset focus:border-transparent bg-white">
                             </div>
                         </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="text-center mt-10 lg:mt-12">
-                        <button type="submit" class="bg-forest hover:bg-forest-light text-cream font-bold py-4 px-12 lg:py-5 lg:px-16 rounded-full shadow-xl transition-transform hover:-translate-y-1 text-xl lg:text-2xl w-full sm:w-auto inline-flex items-center justify-center gap-3">
+                        <button type="submit" data-fs-submit-btn class="bg-forest hover:bg-forest-light text-cream font-bold py-4 px-12 lg:py-5 lg:px-16 rounded-full shadow-xl transition-transform hover:-translate-y-1 text-xl lg:text-2xl w-full sm:w-auto inline-flex items-center justify-center gap-3">
                             <i class="fa-solid fa-paper-plane"></i> Submit Official Report
                         </button>
                         <p class="text-sm lg:text-base text-gray-500 mt-6 flex items-center justify-center gap-2">
@@ -344,7 +344,7 @@
                 </form>
                 
                 <!-- Success Message (Hidden by default) -->
-                <div id="success-message" class="hidden bg-white rounded-3xl shadow-xl border-t-8 border-forest p-12 lg:p-20 text-center mt-8">
+                <div id="success-message" data-fs-success class="hidden bg-white rounded-3xl shadow-xl border-t-8 border-forest p-12 lg:p-20 text-center mt-8">
                     <div class="w-24 h-24 lg:w-32 lg:h-32 bg-forest text-cream rounded-full flex items-center justify-center text-5xl lg:text-7xl mx-auto mb-8 shadow-inner">
                         <i class="fa-solid fa-check"></i>
                     </div>
@@ -425,23 +425,12 @@
                 }
             });
         }
-
-        // Handle Report Form Submission (UI purposes)
-        const form = document.getElementById('sighting-form');
-        const successMessage = document.getElementById('success-message');
-        
-        if(form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault(); // Prevents actual page reload
-                
-                // Hide form, show success message
-                form.classList.add('hidden');
-                successMessage.classList.remove('hidden');
-                
-                // Scroll up smoothly to see the success message
-                document.getElementById('report').scrollIntoView({ behavior: 'smooth' });
-            });
-        }
     </script>
+    <!-- Add this right before your closing </body> tag -->
+<script>
+  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+  formspree('initForm', { formElement: '#sighting-form', formId: 'meeygrre' });
+</script>
+<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 </body>
 </html>
